@@ -2,46 +2,66 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>一方そのころゲーム</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root { --bg-color: #fefae0; --border-color: #e9c46a; --pink-bg: #fff0f5; --pink-border: #ffb6c1; --blue-bg: #f0f8ff; --blue-border: #add8e6; }
-        body { background-color: var(--bg-color); font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; }
-        .header-area { margin: 40px 0 20px 0; text-align: center; }
-        .game-container { display: flex; gap: 40px; padding: 20px; width: 100%; max-width: 1000px; justify-content: center; align-items: flex-start; }
-        .column { flex: 1; display: flex; flex-direction: column; gap: 12px; align-items: center; }
-        .column-header { font-weight: bold; margin-bottom: 20px; font-size: 1.5rem; text-align: center; width: 100%; }
-        .card-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
-        .year-hint { position: absolute; left: -95px; font-size: 0.85rem; font-weight: bold; color: #888; width: 90px; text-align: right; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+        body { background-color: var(--bg-color); font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; overflow-x: hidden; }
+        .header-area { margin: 30px 0 10px 0; text-align: center; }
+        
+        /* ③左右の間隔を調整: max-widthを1000pxから800pxに縮小、gapを調整 */
+        .game-container { display: flex; gap: 20px; padding: 10px; width: 100%; max-width: 800px; justify-content: center; align-items: flex-start; box-sizing: border-box; }
+        
+        .column { flex: 1; display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; }
+        .column-header { font-weight: bold; margin-bottom: 15px; font-size: 1.2rem; text-align: center; width: 100%; }
+        
+        .card-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; padding: 2px 0; }
+        
+        /* 年号ヒントの位置微調整 */
+        .year-hint { position: absolute; left: -75px; font-size: 0.75rem; font-weight: bold; color: #888; width: 70px; text-align: right; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
         .year-hint.show { opacity: 1; }
-        .card { width: 100%; max-width: 320px; min-height: 55px; display: flex; align-items: center; justify-content: center; padding: 10px 15px; border-radius: 12px; text-align: center; cursor: grab; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-size: 0.95rem; word-break: break-all; }
-        .card.dragging { opacity: 0.4; transform: scale(0.98); }
+        
+        /* ②カードの横幅を統一: flex-growやwidthを固定 */
+        .card { 
+            width: 100%; 
+            min-height: 60px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 10px; 
+            border-radius: 10px; 
+            text-align: center; 
+            cursor: grab; 
+            font-weight: bold; 
+            box-shadow: 0 3px 5px rgba(0,0,0,0.05); 
+            font-size: 0.85rem; 
+            word-break: break-all; 
+            box-sizing: border-box; /* paddingを含めて幅を計算 */
+            touch-action: none; /* スマホでのスクロール干渉を防止 */
+            user-select: none;
+        }
+        .card.dragging { opacity: 0.4; transform: scale(0.98); border: 2px dashed #999; }
         .left-card { background: var(--pink-bg); border: 2px solid var(--pink-border); }
         .right-card { background: var(--blue-bg); border: 2px solid var(--blue-border); }
-        #check-btn { margin: 50px; padding: 18px 80px; font-size: 1.3rem; font-weight: bold; background: white; border: 4px solid #555; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #333; }
+        
+        #check-btn { margin: 30px; padding: 15px 60px; font-size: 1.2rem; font-weight: bold; background: white; border: 4px solid #555; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #333; z-index: 10; }
         #check-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
-        .edit-link { position: fixed; bottom: 15px; right: 15px; color: #bbb; text-decoration: none; font-size: 0.75rem; background: rgba(0,0,0,0.03); padding: 8px 12px; border-radius: 6px; }
-        footer { margin-top: auto; padding: 20px; font-size: 0.7rem; color: #888; text-align: center; width: 100%; }
         
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center; width: 420px; z-index: 1001; position: relative; }
+        .edit-link { position: fixed; bottom: 10px; right: 10px; color: #bbb; text-decoration: none; font-size: 0.7rem; background: rgba(0,0,0,0.03); padding: 5px 10px; border-radius: 6px; z-index: 5; }
+        footer { margin-top: auto; padding: 15px; font-size: 0.65rem; color: #888; text-align: center; width: 100%; }
         
-        /* 完全CLEARのフォントスタイル */
-        .perfect-text {
-            font-family: "Rounded Mplus 1c", "Yu Gothic", "Meiryo", sans-serif;
-            color: #6a9c1a; /* 濃い黄緑 */
-            font-size: 4.5rem;
-            font-weight: 900;
-            margin: 0;
-            line-height: 1.1;
-            letter-spacing: -2px;
-        }
-        .congrats-text {
-            color: #555;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-top: 10px;
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); text-align: center; width: 90%; max-width: 400px; z-index: 3001; position: relative; }
+        
+        .perfect-text { font-family: sans-serif; color: #6a9c1a; font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1.1; letter-spacing: -2px; }
+        .congrats-text { color: #555; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
+
+        @media (max-width: 600px) {
+            .game-container { gap: 10px; padding: 5px; }
+            .year-hint { left: -55px; width: 50px; font-size: 0.6rem; }
+            .header-area h1 { font-size: 1.5rem; }
+            .card { font-size: 0.75rem; min-height: 50px; }
         }
     </style>
 </head>
@@ -56,33 +76,24 @@
     
     <div class="modal" id="result-modal">
         <div class="modal-content">
-            <div id="perfect-view" style="display:none;">
-                <div class="perfect-text">完全CLEAR！</div>
-                <div class="congrats-text">おめでとう！</div>
-            </div>
-
+            <div id="perfect-view" style="display:none;"><div class="perfect-text">完全CLEAR！</div><div class="congrats-text">おめでとう！</div></div>
             <div id="normal-view">
-                <h2 style="margin:0 0 25px 0; color: #444;">判定結果</h2>
-                <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-                    <div><div id="score-pos" style="font-size: 4rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666;">正しい位置</div></div>
-                    <div><div id="score-pair" style="font-size: 4rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666;">正しいペア</div></div>
+                <h2 style="margin:0 0 20px 0; color: #444;">判定結果</h2>
+                <div style="display: flex; justify-content: space-around; margin-bottom: 15px;">
+                    <div><div id="score-pos" style="font-size: 3rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666; font-size:0.8rem;">正しい位置</div></div>
+                    <div><div id="score-pair" style="font-size: 3rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666; font-size:0.8rem;">正しいペア</div></div>
                 </div>
-                <p id="total-labels" style="color:#999; font-size: 0.9rem; margin-bottom: 20px;"></p>
+                <p id="total-labels" style="color:#999; font-size: 0.8rem; margin-bottom: 15px;"></p>
             </div>
-            
-            <button onclick="closeModal()" style="margin-top:20px; padding: 12px 40px; border-radius: 25px; border: none; background: #555; color: white; font-weight: bold; cursor: pointer;">閉じる</button>
+            <button onclick="closeModal()" style="margin-top:10px; padding: 10px 30px; border-radius: 20px; border: none; background: #555; color: white; font-weight: bold; cursor: pointer;">閉じる</button>
         </div>
     </div>
 
-    <footer>
-        本プロジェクトは「<a href="https://www.youtube.com/channel/UCOx-oLP9tOhiYwSK_m-yVxA" target="_blank" style="color: #888;">オモコロチャンネル</a>」の動画企画をリスペクトして作成されたファンメイドプロジェクトです。
-    </footer>
+    <footer>本プロジェクトは「<a href="https://www.youtube.com/channel/UCOx-oLP9tOhiYwSK_m-yVxA" target="_blank" style="color: #888;">オモコロチャンネル</a>」の動画企画をリスペクトして作成されたファンメイドプロジェクトです。</footer>
 
     <script>
-        // デフォルトデータを本家仕様に更新
         const defaultConfig = {
-            titleLeft: "オモコロ", 
-            titleRight: "マンガ",
+            titleLeft: "オモコロ", titleRight: "マンガ",
             questions: [
                 { id: 1, year: "2008/5", left: "加藤が「手頭顔寒（てづかおさむ）」になる", right: "トリコと小松が出会う" },
                 { id: 2, year: "2010/6", left: "原宿が自分の卒アルをネットにさらす", right: "ルフィが「仲間がいる゛よ!!!!」と言う" },
@@ -109,7 +120,7 @@
             confettiCanvas.style.position = 'fixed';
             confettiCanvas.style.top = '0'; confettiCanvas.style.left = '0';
             confettiCanvas.style.width = '100%'; confettiCanvas.style.height = '100%';
-            confettiCanvas.style.pointerEvents = 'none'; confettiCanvas.style.zIndex = '2000';
+            confettiCanvas.style.pointerEvents = 'none'; confettiCanvas.style.zIndex = '4000';
             document.body.appendChild(confettiCanvas);
             window.myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
         }
@@ -117,7 +128,6 @@
         function init() {
             const leftCol = document.getElementById('left-column');
             const rightCol = document.getElementById('right-column');
-            // ランダム表示
             const leftItems = [...config.questions].sort(() => Math.random() - 0.5);
             const rightItems = [...config.questions].sort(() => Math.random() - 0.5);
             leftItems.forEach(d => leftCol.appendChild(createWrapper(d, 'left')));
@@ -131,23 +141,55 @@
             if (type === 'right') hint.style.display = 'none';
             const card = document.createElement('div'); card.className = `card ${type}-card`;
             card.innerText = type === 'left' ? item.left : item.right; card.dataset.id = item.id; card.draggable = true;
+
+            // ① タッチ操作対応の追加
+            card.addEventListener('touchstart', handleTouchStart, {passive: false});
+            card.addEventListener('touchmove', handleTouchMove, {passive: false});
+            card.addEventListener('touchend', handleTouchEnd);
+
+            // マウス操作用
             card.addEventListener('dragstart', () => card.classList.add('dragging'));
             card.addEventListener('dragend', () => card.classList.remove('dragging'));
+            
             div.appendChild(hint); div.appendChild(card);
+            
             div.addEventListener('dragover', e => {
-                e.preventDefault(); const dragging = document.querySelector('.dragging');
+                e.preventDefault();
+                const dragging = document.querySelector('.dragging');
                 if (!dragging || !dragging.classList.contains(`${type}-card`)) return;
-                const container = div.parentElement; const afterElement = getDragAfterElement(container, e.clientY);
+                const container = div.parentElement;
+                const afterElement = getDragAfterElement(container, e.clientY);
                 if (!afterElement) container.appendChild(dragging.parentElement);
                 else container.insertBefore(dragging.parentElement, afterElement);
             });
             return div;
         }
 
+        // タッチ操作用関数
+        let activeCard = null;
+        function handleTouchStart(e) {
+            activeCard = e.target;
+            activeCard.classList.add('dragging');
+        }
+        function handleTouchMove(e) {
+            if (!activeCard) return;
+            e.preventDefault(); // スクロール防止
+            const touch = e.touches[0];
+            const container = activeCard.parentElement.parentElement;
+            const afterElement = getDragAfterElement(container, touch.clientY);
+            if (!afterElement) container.appendChild(activeCard.parentElement);
+            else container.insertBefore(activeCard.parentElement, afterElement);
+        }
+        function handleTouchEnd() {
+            if (activeCard) activeCard.classList.remove('dragging');
+            activeCard = null;
+        }
+
         function getDragAfterElement(container, y) {
             const elements = [...container.querySelectorAll('.card-wrapper:not(:has(.dragging))')];
             return elements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2;
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
                 if (offset < 0 && offset > closest.offset) return { offset, element: child };
                 else return closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
@@ -158,15 +200,11 @@
             const leftCards = [...document.querySelectorAll('.left-card')];
             const rightCards = [...document.querySelectorAll('.right-card')];
             let posScore = 0, pairScore = 0;
-
             leftCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i]?.id) posScore++; });
             rightCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i]?.id) posScore++; });
             leftCards.forEach((c, i) => { if(c.dataset.id === rightCards[i]?.dataset.id) pairScore++; });
-
             if (tryCount >= 3) document.querySelectorAll('.year-hint').forEach(h => h.classList.add('show'));
-
             const isPerfect = (posScore === config.questions.length * 2 && pairScore === config.questions.length);
-            
             if (isPerfect) {
                 document.getElementById('perfect-view').style.display = 'block';
                 document.getElementById('normal-view').style.display = 'none';
