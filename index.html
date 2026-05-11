@@ -23,8 +23,33 @@
         #check-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
         .edit-link { position: fixed; bottom: 15px; right: 15px; color: #bbb; text-decoration: none; font-size: 0.75rem; background: rgba(0,0,0,0.03); padding: 8px 12px; border-radius: 6px; }
         footer { margin-top: auto; padding: 20px; font-size: 0.7rem; color: #888; text-align: center; width: 100%; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center; width: 380px; }
+        
+        /* モーダル（背景のぼかし） */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(255,255,255,0.85); 
+            backdrop-filter: blur(4px); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000; /* ゲーム画面より上 */
+        }
+        
+        /* モーダルのコンテンツ（白いポップアップ） */
+        .modal-content { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 30px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2); 
+            text-align: center; 
+            width: 380px; 
+            z-index: 1001; /* ぼかし背景より上 */
+            position: relative; /* z-indexを有効にするため */
+        }
     </style>
 </head>
 <body>
@@ -35,6 +60,7 @@
     </div>
     <button id="check-btn">判定する</button>
     <a href="editor.html" class="edit-link">⚙ 問題を編集する</a>
+    
     <div class="modal" id="result-modal">
         <div class="modal-content">
             <div id="perfect-banner" style="color: #f39c12; font-weight: 900; font-size: 1.5rem; margin-bottom: 10px; display: none;">✨ PERFECT ✨</div>
@@ -47,14 +73,35 @@
             <button onclick="closeModal()" style="padding: 12px 40px; border-radius: 25px; border: none; background: #555; color: white; font-weight: bold; cursor: pointer;">閉じる</button>
         </div>
     </div>
+
     <footer>
         本プロジェクトは「<a href="https://www.youtube.com/channel/UCOx-oLP9tOhiYwSK_m-yVxA" target="_blank" style="color: #888;">オモコロチャンネル</a>」の動画企画をリスペクトして作成されたファンメイドプロジェクトです。
     </footer>
+
     <script>
         const config = JSON.parse(localStorage.getItem('timelineGameConfig')) || { titleLeft: "左の年表", titleRight: "右の年表", questions: [{id:1, year:"1100", left:"1", right:"a"}] };
         document.getElementById('disp-title-left').innerText = config.titleLeft;
         document.getElementById('disp-title-right').innerText = config.titleRight;
         let tryCount = 0;
+        
+        // 紙吹雪用のキャンバスを作成し、最前面に配置する関数
+        let confettiCanvas;
+        function setupConfettiCanvas() {
+            if (confettiCanvas) return; // 既に存在すれば何もしない
+            confettiCanvas = document.createElement('canvas');
+            confettiCanvas.style.position = 'fixed';
+            confettiCanvas.style.top = '0';
+            confettiCanvas.style.left = '0';
+            confettiCanvas.style.width = '100%';
+            confettiCanvas.style.height = '100%';
+            confettiCanvas.style.pointerEvents = 'none'; // クリックを透過させる
+            confettiCanvas.style.zIndex = '2000'; // モーダル(1001)よりもさらに上に配置
+            document.body.appendChild(confettiCanvas);
+            
+            // canvas-confettiをこのキャンバスに関連付ける
+            window.myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+        }
+
         function init() {
             const leftCol = document.getElementById('left-column');
             const rightCol = document.getElementById('right-column');
@@ -62,7 +109,9 @@
             const rightItems = [...config.questions].sort(() => Math.random() - 0.5);
             leftItems.forEach(d => leftCol.appendChild(createWrapper(d, 'left')));
             rightItems.forEach(d => rightCol.appendChild(createWrapper(d, 'right')));
+            setupConfettiCanvas(); // 画面初期化時にキャンバスも準備
         }
+
         function createWrapper(item, type) {
             const div = document.createElement('div'); div.className = 'card-wrapper';
             const hint = document.createElement('div'); hint.className = 'year-hint'; hint.innerText = item.year;
@@ -81,6 +130,7 @@
             });
             return div;
         }
+
         function getDragAfterElement(container, y) {
             const elements = [...container.querySelectorAll('.card-wrapper:not(:has(.dragging))')];
             return elements.reduce((closest, child) => {
@@ -89,6 +139,7 @@
                 else return closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
+
         document.getElementById('check-btn').onclick = () => {
             tryCount++; const leftCards = [...document.querySelectorAll('.left-card')]; const rightCards = [...document.querySelectorAll('.right-card')];
             let posScore = 0, pairScore = 0;
@@ -96,12 +147,22 @@
             rightCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i]?.id) posScore++; });
             leftCards.forEach((c, i) => { if(c.dataset.id === rightCards[i]?.dataset.id) pairScore++; });
             if (tryCount >= 3) document.querySelectorAll('.year-hint').forEach(h => h.classList.add('show'));
+            
             const isPerfect = (posScore === config.questions.length * 2 && pairScore === config.questions.length);
-            if (isPerfect) { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); document.getElementById('perfect-banner').style.display = 'block'; }
+            
+            if (isPerfect && window.myConfetti) {
+                // 最前面のキャンバスで紙吹雪を実行
+                window.myConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
+                document.getElementById('perfect-banner').style.display = 'block'; 
+            } else {
+                document.getElementById('perfect-banner').style.display = 'none';
+            }
+
             document.getElementById('score-pos').innerText = posScore; document.getElementById('score-pair').innerText = pairScore;
             document.getElementById('total-labels').innerText = `位置: ${posScore}/${config.questions.length*2}  ペア: ${pairScore}/${config.questions.length}`;
             document.getElementById('result-modal').style.display = 'flex';
         };
+
         function closeModal() { document.getElementById('result-modal').style.display = 'none'; }
         init();
     </script>
