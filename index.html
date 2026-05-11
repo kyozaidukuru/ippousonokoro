@@ -10,7 +10,6 @@
         body { background-color: var(--bg-color); font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; overflow-x: hidden; }
         .header-area { margin: 30px 0 10px 0; text-align: center; }
         
-        /* ③左右の間隔を調整: max-widthを1000pxから800pxに縮小、gapを調整 */
         .game-container { display: flex; gap: 20px; padding: 10px; width: 100%; max-width: 800px; justify-content: center; align-items: flex-start; box-sizing: border-box; }
         
         .column { flex: 1; display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; }
@@ -18,18 +17,17 @@
         
         .card-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; padding: 2px 0; }
         
-        /* 年号ヒントの位置微調整 */
         .year-hint { position: absolute; left: -75px; font-size: 0.75rem; font-weight: bold; color: #888; width: 70px; text-align: right; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
         .year-hint.show { opacity: 1; }
         
-        /* ②カードの横幅を統一: flex-growやwidthを固定 */
         .card { 
             width: 100%; 
-            min-height: 60px; 
+            /* 修正点：高さを固定。2行になっても余裕がある高さに設定 */
+            height: 75px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            padding: 10px; 
+            padding: 5px 10px; 
             border-radius: 10px; 
             text-align: center; 
             cursor: grab; 
@@ -37,9 +35,10 @@
             box-shadow: 0 3px 5px rgba(0,0,0,0.05); 
             font-size: 0.85rem; 
             word-break: break-all; 
-            box-sizing: border-box; /* paddingを含めて幅を計算 */
-            touch-action: none; /* スマホでのスクロール干渉を防止 */
+            box-sizing: border-box; 
+            touch-action: none; 
             user-select: none;
+            overflow: hidden; /* 万が一はみ出しても崩れないように */
         }
         .card.dragging { opacity: 0.4; transform: scale(0.98); border: 2px dashed #999; }
         .left-card { background: var(--pink-bg); border: 2px solid var(--pink-border); }
@@ -61,7 +60,8 @@
             .game-container { gap: 10px; padding: 5px; }
             .year-hint { left: -55px; width: 50px; font-size: 0.6rem; }
             .header-area h1 { font-size: 1.5rem; }
-            .card { font-size: 0.75rem; min-height: 50px; }
+            /* スマホ用：文字をさらに小さくし、高さを少し抑えつつ固定 */
+            .card { font-size: 0.75rem; height: 65px; }
         }
     </style>
 </head>
@@ -142,12 +142,10 @@
             const card = document.createElement('div'); card.className = `card ${type}-card`;
             card.innerText = type === 'left' ? item.left : item.right; card.dataset.id = item.id; card.draggable = true;
 
-            // ① タッチ操作対応の追加
             card.addEventListener('touchstart', handleTouchStart, {passive: false});
             card.addEventListener('touchmove', handleTouchMove, {passive: false});
             card.addEventListener('touchend', handleTouchEnd);
 
-            // マウス操作用
             card.addEventListener('dragstart', () => card.classList.add('dragging'));
             card.addEventListener('dragend', () => card.classList.remove('dragging'));
             
@@ -165,7 +163,6 @@
             return div;
         }
 
-        // タッチ操作用関数
         let activeCard = null;
         function handleTouchStart(e) {
             activeCard = e.target;
@@ -173,7 +170,7 @@
         }
         function handleTouchMove(e) {
             if (!activeCard) return;
-            e.preventDefault(); // スクロール防止
+            e.preventDefault();
             const touch = e.touches[0];
             const container = activeCard.parentElement.parentElement;
             const afterElement = getDragAfterElement(container, touch.clientY);
