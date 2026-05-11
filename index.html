@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年表並べ替えゲーム 本編</title>
+    <style>
+        :root {
+            --bg-color: #fefae0;
+            --border-color: #e9c46a;
+            --pink-bg: #fff0f5;
+            --pink-border: #ffb6c1;
+            --blue-bg: #f0f8ff;
+            --blue-border: #add8e6;
+            --text-color: #333;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            border: 10px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        .header-area { text-align: center; margin: 20px; }
+        .edit-link { display: inline-block; margin-top: 10px; color: #3498db; text-decoration: none; font-size: 0.9rem; }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            padding: 10px;
+            width: 100%;
+            max-width: 1000px;
+            justify-content: center;
+        }
+
+        .column { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 250px; }
+        .column-header { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; }
+
+        .card-wrapper { display: flex; align-items: center; gap: 8px; }
+        .year-hint {
+            font-size: 0.85rem; font-weight: bold; color: #888;
+            width: 70px; text-align: right; opacity: 0; transition: opacity 0.5s ease;
+        }
+        .year-hint.show { opacity: 1; }
+
+        .card {
+            flex: 1; padding: 15px 10px; border-radius: 8px; text-align: center;
+            cursor: grab; font-weight: bold; user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.95rem;
+        }
+        .card.dragging { opacity: 0.4; transform: scale(0.98); }
+        .left-card { background: var(--pink-bg); border: 2px solid var(--pink-border); }
+        .right-card { background: var(--blue-bg); border: 2px solid var(--blue-border); }
+
+        #check-btn {
+            margin: 30px; padding: 15px 50px; font-size: 1.2rem; font-weight: bold;
+            background: white; border: 4px solid #555; border-radius: 50px; cursor: pointer;
+        }
+        #check-btn:hover { background: #555; color: white; }
+
+        /* モーダル */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 40px; border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15); text-align: center; width: 350px;
+        }
+        .score-row { display: flex; justify-content: space-around; margin: 25px 0; }
+        .score-num { font-size: 3.5rem; font-weight: 900; line-height: 1; }
+        .score-label { font-size: 0.8rem; color: #888; margin-top: 5px; }
+        .close-btn { padding: 12px 40px; border-radius: 25px; border: none; background: #eee; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="header-area">
+        <h1>年表並べ替えゲーム</h1>
+        <a href="editor.html" class="edit-link">⚙ 問題を作り直す</a>
+    </div>
+
+    <div class="game-container">
+        <div class="column" id="left-column">
+            <div class="column-header">オモコロ</div>
+        </div>
+        <div class="column" id="right-column">
+            <div class="column-header">マンガ</div>
+        </div>
+    </div>
+
+    <button id="check-btn">判定する</button>
+
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0">判定結果</h2>
+            <div class="score-row">
+                <div>
+                    <div class="score-num" id="score-pos">0</div>
+                    <div class="score-label" id="label-pos">0 / 0</div>
+                    <div style="font-weight:bold">正しい位置</div>
+                </div>
+                <div>
+                    <div class="score-num" id="score-pair">0</div>
+                    <div class="score-label" id="label-pair">0 / 0</div>
+                    <div style="font-weight:bold">正しいペア</div>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeModal()">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        // --- データ読み込み ---
+        let rawData = JSON.parse(localStorage.getItem('timelineGameData')) || [
+            { id: 1, left: "1", right: "a", year: "1100" },
+            { id: 2, left: "2", right: "b", year: "1200" }
+        ];
+
+        let tryCount = 0;
+
+        function init() {
+            const leftCol = document.getElementById('left-column');
+            const rightCol = document.getElementById('right-column');
+            
+            // 左・右それぞれのデータをシャッフル
+            const leftItems = [...rawData].sort(() => Math.random() - 0.5);
+            const rightItems = [...rawData].sort(() => Math.random() - 0.5);
+
+            leftItems.forEach(d => leftCol.appendChild(createWrapper(d, 'left')));
+            rightItems.forEach(d => rightCol.appendChild(createWrapper(d, 'right')));
+        }
+
+        function createWrapper(item, type) {
+            const div = document.createElement('div');
+            div.className = 'card-wrapper';
+            
+            const hint = document.createElement('div');
+            hint.className = 'year-hint';
+            hint.innerText = item.year;
+            // 右側にはヒントを表示しない
+            if (type === 'right') hint.style.visibility = 'hidden';
+
+            const card = document.createElement('div');
+            card.className = `card ${type}-card`;
+            card.innerText = type === 'left' ? item.left : item.right;
+            card.dataset.id = item.id;
+            card.draggable = true;
+
+            // ドラッグイベント
+            card.addEventListener('dragstart', () => card.classList.add('dragging'));
+            card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+            div.appendChild(hint);
+            div.appendChild(card);
+
+            div.addEventListener('dragover', e => {
+                e.preventDefault();
+                const dragging = document.querySelector('.dragging');
+                if (!dragging || !dragging.classList.contains(`${type}-card`)) return;
+                
+                const container = div.parentElement;
+                const afterElement = getDragAfterElement(container, e.clientY);
+                if (!afterElement) container.appendChild(dragging.parentElement);
+                else container.insertBefore(dragging.parentElement, afterElement);
+            });
+
+            return div;
+        }
+
+        function getDragAfterElement(container, y) {
+            const elements = [...container.querySelectorAll('.card-wrapper:not(:has(.dragging))')];
+            return elements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                else return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // --- 判定ロジック ---
+        document.getElementById('check-btn').onclick = () => {
+            tryCount++;
+            const leftCards = [...document.querySelectorAll('.left-card')];
+            const rightCards = [...document.querySelectorAll('.right-card')];
+            
+            let posScore = 0;
+            let pairScore = 0;
+
+            // 正しい位置判定
+            leftCards.forEach((c, i) => { if(parseInt(c.dataset.id) === rawData[i].id) posScore++; });
+            rightCards.forEach((c, i) => { if(parseInt(c.dataset.id) === rawData[i].id) posScore++; });
+
+            // 正しいペア判定 (同じ行にあるか)
+            leftCards.forEach((c, i) => {
+                if(c.dataset.id === rightCards[i].dataset.id) pairScore++;
+            });
+
+            if (tryCount >= 3) document.querySelectorAll('.year-hint').forEach(h => h.classList.add('show'));
+
+            showModal(posScore, pairScore);
+        };
+
+        function showModal(pos, pair) {
+            document.getElementById('score-pos').innerText = pos;
+            document.getElementById('label-pos').innerText = `${pos} / ${rawData.length * 2}`;
+            document.getElementById('score-pair').innerText = pair;
+            document.getElementById('label-pair').innerText = `${pair} / ${rawData.length}`;
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('result-modal').style.display = 'none'; }
+
+        init();
+    </script>
+</body>
+</html>
