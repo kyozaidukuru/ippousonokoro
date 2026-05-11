@@ -9,58 +9,31 @@
         :root { --bg-color: #fefae0; --border-color: #e9c46a; --pink-bg: #fff0f5; --pink-border: #ffb6c1; --blue-bg: #f0f8ff; --blue-border: #add8e6; }
         body { background-color: var(--bg-color); font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; overflow-x: hidden; }
         .header-area { margin: 30px 0 10px 0; text-align: center; }
-        
         .game-container { display: flex; gap: 20px; padding: 10px; width: 100%; max-width: 800px; justify-content: center; align-items: flex-start; box-sizing: border-box; }
-        
         .column { flex: 1; display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; }
         .column-header { font-weight: bold; margin-bottom: 15px; font-size: 1.2rem; text-align: center; width: 100%; }
-        
         .card-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; padding: 2px 0; }
-        
         .year-hint { position: absolute; left: -75px; font-size: 0.75rem; font-weight: bold; color: #888; width: 70px; text-align: right; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
         .year-hint.show { opacity: 1; }
-        
         .card { 
-            width: 100%; 
-            /* 修正点：高さを固定。2行になっても余裕がある高さに設定 */
-            height: 75px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 5px 10px; 
-            border-radius: 10px; 
-            text-align: center; 
-            cursor: grab; 
-            font-weight: bold; 
-            box-shadow: 0 3px 5px rgba(0,0,0,0.05); 
-            font-size: 0.85rem; 
-            word-break: break-all; 
-            box-sizing: border-box; 
-            touch-action: none; 
-            user-select: none;
-            overflow: hidden; /* 万が一はみ出しても崩れないように */
+            width: 100%; height: 75px; display: flex; align-items: center; justify-content: center; padding: 5px 10px; 
+            border-radius: 10px; text-align: center; cursor: grab; font-weight: bold; box-shadow: 0 3px 5px rgba(0,0,0,0.05); 
+            font-size: 0.85rem; word-break: break-all; box-sizing: border-box; touch-action: none; user-select: none; overflow: hidden;
         }
         .card.dragging { opacity: 0.4; transform: scale(0.98); border: 2px dashed #999; }
         .left-card { background: var(--pink-bg); border: 2px solid var(--pink-border); }
         .right-card { background: var(--blue-bg); border: 2px solid var(--blue-border); }
-        
         #check-btn { margin: 30px; padding: 15px 60px; font-size: 1.2rem; font-weight: bold; background: white; border: 4px solid #555; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #333; z-index: 10; }
         #check-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
-        
         .edit-link { position: fixed; bottom: 10px; right: 10px; color: #bbb; text-decoration: none; font-size: 0.7rem; background: rgba(0,0,0,0.03); padding: 5px 10px; border-radius: 6px; z-index: 5; }
         footer { margin-top: auto; padding: 15px; font-size: 0.65rem; color: #888; text-align: center; width: 100%; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 3000; }
         .modal-content { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); text-align: center; width: 90%; max-width: 400px; z-index: 3001; position: relative; }
-        
-        .perfect-text { font-family: sans-serif; color: #6a9c1a; font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1.1; letter-spacing: -2px; }
+        .perfect-text { color: #6a9c1a; font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1.1; letter-spacing: -2px; }
         .congrats-text { color: #555; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
-
         @media (max-width: 600px) {
             .game-container { gap: 10px; padding: 5px; }
             .year-hint { left: -55px; width: 50px; font-size: 0.6rem; }
-            .header-area h1 { font-size: 1.5rem; }
-            /* スマホ用：文字をさらに小さくし、高さを少し抑えつつ固定 */
             .card { font-size: 0.75rem; height: 65px; }
         }
     </style>
@@ -89,26 +62,35 @@
         </div>
     </div>
 
-    <footer>本プロジェクトは「<a href="https://www.youtube.com/channel/UCOx-oLP9tOhiYwSK_m-yVxA" target="_blank" style="color: #888;">オモコロチャンネル</a>」の動画企画をリスペクトして作成されたファンメイドプロジェクトです。</footer>
+    <footer>本プロジェクトは「オモコロチャンネル」のリスペクト企画です。</footer>
 
     <script>
         const defaultConfig = {
             titleLeft: "オモコロ", titleRight: "マンガ",
             questions: [
-                { id: 1, year: "2008/5", left: "加藤が「手頭顔寒（てづかおさむ）」になる", right: "トリコと小松が出会う" },
-                { id: 2, year: "2010/6", left: "原宿が自分の卒アルをネットにさらす", right: "ルフィが「仲間がいる゛よ!!!!」と言う" },
-                { id: 3, year: "2011/12", left: "THE・チンゲポーカーが行われる", right: "刃牙が勇次郎と直接対決、関節をキメる" },
-                { id: 4, year: "2012/1", left: "原宿がオモコロ二代目編集長に就任", right: "レオリオがハンター選挙で演説する" },
-                { id: 5, year: "2013/3", left: "原宿がハーゲンダッツのトロをかき集める", right: "ワシズが地獄に落ちる" },
-                { id: 6, year: "2014/8", left: "ARuFaがシャワーを美少女にする", right: "暗黒大陸行きの船が出発する" },
-                { id: 7, year: "2015/12", left: "ギャラクシーの睾丸が一コになる", right: "鎧の巨人の両眼に「雷槍」が刺さる" },
-                { id: 8, year: "2016/1", left: "OLの永田がチェジュ市まで傷心旅行", right: "烏野高校男子バレー部の全国出場が決定" },
-                { id: 9, year: "2017/6", left: "キショ松容疑者が逮捕", right: "炭治郎が「煉獄さんは負けてない！」と言う" },
-                { id: 10, year: "2018/10", left: "ARuFaがケツを展示", right: "二代目野見宿禰がボルダリングする" }
+                { id: 1, year: "2008/5", left: "加藤が「手頭顔寒」になる", right: "トリコと小松が出会う" },
+                { id: 2, year: "2010/6", left: "原宿が自分の卒アルを晒す", right: "ルフィが仲間の存在に気づく" },
+                { id: 3, year: "2011/12", left: "THE・チンゲポーカー", right: "刃牙が勇次郎に関節をキメる" },
+                { id: 4, year: "2012/1", left: "原宿が二代目編集長に就任", right: "レオリオが選挙で演説" },
+                { id: 5, year: "2013/3", left: "原宿がトロをかき集める", right: "ワシズが地獄に落ちる" },
+                { id: 6, year: "2014/8", left: "ARuFaがシャワーを美少女に", right: "暗黒大陸行きの船が出発" },
+                { id: 7, year: "2015/12", left: "ギャラクシーの睾丸が1個に", right: "鎧の巨人に雷槍が刺さる" },
+                { id: 8, year: "2016/1", left: "永田がチェジュ市へ旅行", right: "烏野高校が全国出場決定" },
+                { id: 9, year: "2017/6", left: "キショ松容疑者が逮捕", right: "炭治郎が煉獄の勝利を叫ぶ" },
+                { id: 10, year: "2018/10", left: "ARuFaがケツを展示", right: "二代目野見宿禰が登場" }
             ]
         };
 
-        const config = JSON.parse(localStorage.getItem('timelineGameConfig')) || defaultConfig;
+        function getConfig() {
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            if (q) {
+                try { return JSON.parse(decodeURIComponent(escape(atob(q)))); } catch (e) { console.error(e); }
+            }
+            return JSON.parse(localStorage.getItem('timelineGameConfig')) || defaultConfig;
+        }
+
+        const config = getConfig();
         document.getElementById('disp-title-left').innerText = config.titleLeft;
         document.getElementById('disp-title-right').innerText = config.titleRight;
         let tryCount = 0;
@@ -117,8 +99,7 @@
         function setupConfettiCanvas() {
             if (confettiCanvas) return;
             confettiCanvas = document.createElement('canvas');
-            confettiCanvas.style.position = 'fixed';
-            confettiCanvas.style.top = '0'; confettiCanvas.style.left = '0';
+            confettiCanvas.style.position = 'fixed'; confettiCanvas.style.top = '0'; confettiCanvas.style.left = '0';
             confettiCanvas.style.width = '100%'; confettiCanvas.style.height = '100%';
             confettiCanvas.style.pointerEvents = 'none'; confettiCanvas.style.zIndex = '4000';
             document.body.appendChild(confettiCanvas);
@@ -141,16 +122,12 @@
             if (type === 'right') hint.style.display = 'none';
             const card = document.createElement('div'); card.className = `card ${type}-card`;
             card.innerText = type === 'left' ? item.left : item.right; card.dataset.id = item.id; card.draggable = true;
-
             card.addEventListener('touchstart', handleTouchStart, {passive: false});
             card.addEventListener('touchmove', handleTouchMove, {passive: false});
             card.addEventListener('touchend', handleTouchEnd);
-
             card.addEventListener('dragstart', () => card.classList.add('dragging'));
             card.addEventListener('dragend', () => card.classList.remove('dragging'));
-            
             div.appendChild(hint); div.appendChild(card);
-            
             div.addEventListener('dragover', e => {
                 e.preventDefault();
                 const dragging = document.querySelector('.dragging');
@@ -164,23 +141,16 @@
         }
 
         let activeCard = null;
-        function handleTouchStart(e) {
-            activeCard = e.target;
-            activeCard.classList.add('dragging');
-        }
+        function handleTouchStart(e) { activeCard = e.target; activeCard.classList.add('dragging'); }
         function handleTouchMove(e) {
-            if (!activeCard) return;
-            e.preventDefault();
+            if (!activeCard) return; e.preventDefault();
             const touch = e.touches[0];
             const container = activeCard.parentElement.parentElement;
             const afterElement = getDragAfterElement(container, touch.clientY);
             if (!afterElement) container.appendChild(activeCard.parentElement);
             else container.insertBefore(activeCard.parentElement, afterElement);
         }
-        function handleTouchEnd() {
-            if (activeCard) activeCard.classList.remove('dragging');
-            activeCard = null;
-        }
+        function handleTouchEnd() { if (activeCard) activeCard.classList.remove('dragging'); activeCard = null; }
 
         function getDragAfterElement(container, y) {
             const elements = [...container.querySelectorAll('.card-wrapper:not(:has(.dragging))')];
