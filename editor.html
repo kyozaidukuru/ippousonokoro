@@ -14,12 +14,13 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #eee; padding: 12px; border: 1px solid #ddd; }
         td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-        input { width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        input { width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; text-align: center; }
         .controls { display: flex; justify-content: space-between; margin-top: 20px; }
         button { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .add-btn { background: var(--success); color: white; }
         .start-btn { background: var(--primary); color: white; font-size: 1.2rem; }
         .remove-btn { background: var(--danger); color: white; padding: 5px 12px; }
+        footer { margin-top: 30px; font-size: 0.7rem; color: #888; text-align: center; }
     </style>
 </head>
 <body>
@@ -30,11 +31,11 @@
     <div class="title-settings">
         <div class="title-input-group">
             <label>左カラムのタイトル</label>
-            <input type="text" id="main-title-left" value="オモコロ">
+            <input type="text" id="main-title-left" value="左の年表">
         </div>
         <div class="title-input-group">
             <label>右カラムのタイトル</label>
-            <input type="text" id="main-title-right" value="マンガ">
+            <input type="text" id="main-title-right" value="右の年表">
         </div>
     </div>
 
@@ -48,29 +49,34 @@
             </tr>
         </thead>
         <tbody id="table-body">
-            <tr>
-                <td><input type="text" class="in-year" value="1100"></td>
-                <td><input type="text" class="in-left" value="1"></td>
-                <td><input type="text" class="in-right" value="a"></td>
-                <td><button class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button></td>
-            </tr>
-        </tbody>
+            </tbody>
     </table>
 
     <div class="controls">
-        <button class="add-btn" onclick="addRow()">＋ 行を追加</button>
+        <button class="add-btn" onclick="addRow()">＋ さらに行を追加</button>
         <button class="start-btn" onclick="saveAndStart()">この内容でゲーム開始！</button>
     </div>
 </div>
 
+<footer>
+    本プロジェクトは「<a href="https://www.youtube.com/@omocoro" target="_blank" style="color: #888;">オモコロ</a>」の動画企画をリスペクトして作成されたファンメイドプロジェクトです。
+</footer>
+
 <script>
+    // 初期状態で10行作成
+    window.onload = () => {
+        for(let i=0; i<10; i++) {
+            addRow(i === 0); // 最初の行だけサンプルを入れる場合はここを調整
+        }
+    };
+
     function addRow() {
         const tbody = document.getElementById('table-body');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" class="in-year"></td>
-            <td><input type="text" class="in-left"></td>
-            <td><input type="text" class="in-right"></td>
+            <td><input type="text" class="in-year" placeholder="例: 2024/01"></td>
+            <td><input type="text" class="in-left" placeholder="左の項目"></td>
+            <td><input type="text" class="in-right" placeholder="右の項目"></td>
             <td><button class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button></td>
         `;
         tbody.appendChild(tr);
@@ -80,13 +86,19 @@
         const data = [];
         const rows = document.querySelectorAll('#table-body tr');
         rows.forEach((row, index) => {
-            data.push({
-                id: index + 1,
-                year: row.querySelector('.in-year').value,
-                left: row.querySelector('.in-left').value,
-                right: row.querySelector('.in-right').value
-            });
+            const y = row.querySelector('.in-year').value;
+            const l = row.querySelector('.in-left').value;
+            const r = row.querySelector('.in-right').value;
+            // 片方でも入力があれば採用
+            if (l.trim() !== "" || r.trim() !== "") {
+                data.push({ id: index + 1, year: y, left: l, right: r });
+            }
         });
+
+        if (data.length === 0) {
+            alert("問題を入力してください。");
+            return;
+        }
 
         const config = {
             titleLeft: document.getElementById('main-title-left').value,
@@ -98,8 +110,5 @@
         window.location.href = 'index.html';
     }
 </script>
-    <footer style="margin-top: auto; padding: 20px; font-size: 0.7rem; color: #888; text-align: center;">
-    本プロジェクトは「<a href="https://www.youtube.com/@omocorochannel" target="_blank" style="color: #888;">オモコロチャンネル</a>」の動画企画をリスペクトして作成されたファンメイドプロジェクトです。
-</footer>
 </body>
 </html>
