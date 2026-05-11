@@ -3,137 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>年表並べ替えゲーム 本編</title>
+    <title>年表並べ替えゲーム</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        :root {
-            --bg-color: #fefae0;
-            --border-color: #e9c46a;
-            --pink-bg: #fff0f5;
-            --pink-border: #ffb6c1;
-            --blue-bg: #f0f8ff;
-            --blue-border: #add8e6;
-            --text-color: #333;
-        }
+        :root { --bg-color: #fefae0; --border-color: #e9c46a; --pink-bg: #fff0f5; --pink-border: #ffb6c1; --blue-bg: #f0f8ff; --blue-border: #add8e6; }
+        body { background-color: var(--bg-color); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; position: relative; }
+        
+        .header-area { margin: 30px 0; text-align: center; }
+        
+        /* タイトルとカードの軸を揃える設定 */
+        .game-container { display: flex; gap: 0; padding: 10px; width: 100%; max-width: 900px; justify-content: center; }
+        .column { flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .column-header { font-weight: bold; margin-bottom: 20px; font-size: 1.4rem; width: 100%; text-align: center; }
 
-        body {
-            background-color: var(--bg-color);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            border: 10px solid var(--border-color);
-            box-sizing: border-box;
-        }
-
-        .header-area { text-align: center; margin: 20px; }
-        .edit-link { display: inline-block; margin-top: 10px; color: #3498db; text-decoration: none; font-size: 0.9rem; }
-
-        .game-container {
-            display: flex;
-            gap: 20px;
-            padding: 10px;
-            width: 100%;
-            max-width: 1000px;
-            justify-content: center;
-        }
-
-        .column { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 250px; }
-        .column-header { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; }
-
-        .card-wrapper { display: flex; align-items: center; gap: 8px; }
-        .year-hint {
-            font-size: 0.85rem; font-weight: bold; color: #888;
-            width: 70px; text-align: right; opacity: 0; transition: opacity 0.5s ease;
-        }
+        .card-wrapper { display: flex; align-items: center; gap: 10px; width: 90%; justify-content: flex-end; }
+        .year-hint { font-size: 0.85rem; font-weight: bold; color: #888; width: 70px; text-align: right; opacity: 0; transition: opacity 0.5s; }
         .year-hint.show { opacity: 1; }
 
-        .card {
-            flex: 1; padding: 15px 10px; border-radius: 8px; text-align: center;
-            cursor: grab; font-weight: bold; user-select: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.95rem;
-        }
-        .card.dragging { opacity: 0.4; transform: scale(0.98); }
+        .card { flex: 1; padding: 15px; border-radius: 8px; text-align: center; cursor: grab; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 300px; width: 100%; }
         .left-card { background: var(--pink-bg); border: 2px solid var(--pink-border); }
         .right-card { background: var(--blue-bg); border: 2px solid var(--blue-border); }
 
-        #check-btn {
-            margin: 30px; padding: 15px 50px; font-size: 1.2rem; font-weight: bold;
-            background: white; border: 4px solid #555; border-radius: 50px; cursor: pointer;
-        }
+        #check-btn { margin: 40px; padding: 15px 60px; font-size: 1.2rem; font-weight: bold; background: white; border: 4px solid #555; border-radius: 50px; cursor: pointer; z-index: 10; }
         #check-btn:hover { background: #555; color: white; }
 
+        /* 設定ボタンを右下に配置 */
+        .edit-link { position: fixed; bottom: 20px; right: 20px; color: #aaa; text-decoration: none; font-size: 0.7rem; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 4px; }
+        .edit-link:hover { background: rgba(0,0,0,0.1); }
+
         /* モーダル */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8); backdrop-filter: blur(5px);
-            justify-content: center; align-items: center; z-index: 1000;
-        }
-        .modal-content {
-            background: white; padding: 40px; border-radius: 25px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15); text-align: center; width: 350px;
-        }
-        .score-row { display: flex; justify-content: space-around; margin: 25px 0; }
-        .score-num { font-size: 3.5rem; font-weight: 900; line-height: 1; }
-        .score-label { font-size: 0.8rem; color: #888; margin-top: 5px; }
-        .close-btn { padding: 12px 40px; border-radius: 25px; border: none; background: #eee; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 40px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); text-align: center; width: 350px; }
+        .score-num { font-size: 4rem; font-weight: 900; line-height: 1; margin-bottom: 5px; }
+        .perfect-msg { color: #e67e22; font-weight: bold; display: none; margin-bottom: 15px; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
     <div class="header-area">
         <h1>年表並べ替えゲーム</h1>
-        <a href="editor.html" class="edit-link">⚙ 問題を作り直す</a>
     </div>
 
     <div class="game-container">
-        <div class="column" id="left-column">
-            <div class="column-header">オモコロ</div>
+        <div class="column">
+            <div class="column-header" id="disp-title-left">左カラム</div>
+            <div id="left-column" style="width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center;"></div>
         </div>
-        <div class="column" id="right-column">
-            <div class="column-header">マンガ</div>
+        <div class="column">
+            <div class="column-header" id="disp-title-right">右カラム</div>
+            <div id="right-column" style="width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center;"></div>
         </div>
     </div>
 
     <button id="check-btn">判定する</button>
+    <a href="editor.html" class="edit-link">問題を編集する</a>
 
     <div class="modal" id="result-modal">
         <div class="modal-content">
-            <h2 style="margin-top:0">判定結果</h2>
-            <div class="score-row">
+            <div id="perfect-banner" class="perfect-msg">✨ PERFECT ✨</div>
+            <h2 style="margin:0 0 20px 0; color: #555;">判定結果</h2>
+            <div style="display: flex; justify-content: space-around;">
                 <div>
                     <div class="score-num" id="score-pos">0</div>
-                    <div class="score-label" id="label-pos">0 / 0</div>
                     <div style="font-weight:bold">正しい位置</div>
                 </div>
                 <div>
                     <div class="score-num" id="score-pair">0</div>
-                    <div class="score-label" id="label-pair">0 / 0</div>
                     <div style="font-weight:bold">正しいペア</div>
                 </div>
             </div>
-            <button class="close-btn" onclick="closeModal()">閉じる</button>
+            <p id="total-labels" style="color:#888; margin: 20px 0;"></p>
+            <button onclick="closeModal()" style="padding: 10px 30px; border-radius: 20px; border: none; background: #eee; cursor: pointer;">閉じる</button>
         </div>
     </div>
 
     <script>
-        // --- データ読み込み ---
-        let rawData = JSON.parse(localStorage.getItem('timelineGameData')) || [
-            { id: 1, left: "1", right: "a", year: "1100" },
-            { id: 2, left: "2", right: "b", year: "1200" }
-        ];
+        const config = JSON.parse(localStorage.getItem('timelineGameConfig')) || {
+            titleLeft: "左カラム", titleRight: "右カラム",
+            questions: [{id:1, year:"1100", left:"1", right:"a"}]
+        };
+
+        document.getElementById('disp-title-left').innerText = config.titleLeft;
+        document.getElementById('disp-title-right').innerText = config.titleRight;
 
         let tryCount = 0;
 
         function init() {
             const leftCol = document.getElementById('left-column');
             const rightCol = document.getElementById('right-column');
-            
-            // 左・右それぞれのデータをシャッフル
-            const leftItems = [...rawData].sort(() => Math.random() - 0.5);
-            const rightItems = [...rawData].sort(() => Math.random() - 0.5);
-
+            const leftItems = [...config.questions].sort(() => Math.random() - 0.5);
+            const rightItems = [...config.questions].sort(() => Math.random() - 0.5);
             leftItems.forEach(d => leftCol.appendChild(createWrapper(d, 'left')));
             rightItems.forEach(d => rightCol.appendChild(createWrapper(d, 'right')));
         }
@@ -141,11 +100,9 @@
         function createWrapper(item, type) {
             const div = document.createElement('div');
             div.className = 'card-wrapper';
-            
             const hint = document.createElement('div');
             hint.className = 'year-hint';
             hint.innerText = item.year;
-            // 右側にはヒントを表示しない
             if (type === 'right') hint.style.visibility = 'hidden';
 
             const card = document.createElement('div');
@@ -154,10 +111,8 @@
             card.dataset.id = item.id;
             card.draggable = true;
 
-            // ドラッグイベント
             card.addEventListener('dragstart', () => card.classList.add('dragging'));
             card.addEventListener('dragend', () => card.classList.remove('dragging'));
-
             div.appendChild(hint);
             div.appendChild(card);
 
@@ -165,13 +120,11 @@
                 e.preventDefault();
                 const dragging = document.querySelector('.dragging');
                 if (!dragging || !dragging.classList.contains(`${type}-card`)) return;
-                
                 const container = div.parentElement;
                 const afterElement = getDragAfterElement(container, e.clientY);
                 if (!afterElement) container.appendChild(dragging.parentElement);
                 else container.insertBefore(dragging.parentElement, afterElement);
             });
-
             return div;
         }
 
@@ -185,39 +138,34 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // --- 判定ロジック ---
         document.getElementById('check-btn').onclick = () => {
             tryCount++;
             const leftCards = [...document.querySelectorAll('.left-card')];
             const rightCards = [...document.querySelectorAll('.right-card')];
-            
-            let posScore = 0;
-            let pairScore = 0;
+            let posScore = 0, pairScore = 0;
 
-            // 正しい位置判定
-            leftCards.forEach((c, i) => { if(parseInt(c.dataset.id) === rawData[i].id) posScore++; });
-            rightCards.forEach((c, i) => { if(parseInt(c.dataset.id) === rawData[i].id) posScore++; });
-
-            // 正しいペア判定 (同じ行にあるか)
-            leftCards.forEach((c, i) => {
-                if(c.dataset.id === rightCards[i].dataset.id) pairScore++;
-            });
+            leftCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i].id) posScore++; });
+            rightCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i].id) posScore++; });
+            leftCards.forEach((c, i) => { if(c.dataset.id === rightCards[i].dataset.id) pairScore++; });
 
             if (tryCount >= 3) document.querySelectorAll('.year-hint').forEach(h => h.classList.add('show'));
 
-            showModal(posScore, pairScore);
+            // 全問正解時の演出
+            const isPerfect = (posScore === config.questions.length * 2 && pairScore === config.questions.length);
+            if (isPerfect) {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                document.getElementById('perfect-banner').style.display = 'block';
+            } else {
+                document.getElementById('perfect-banner').style.display = 'none';
+            }
+
+            document.getElementById('score-pos').innerText = posScore;
+            document.getElementById('score-pair').innerText = pairScore;
+            document.getElementById('total-labels').innerText = `位置: ${posScore}/${config.questions.length*2}  ペア: ${pairScore}/${config.questions.length}`;
+            document.getElementById('result-modal').style.display = 'flex';
         };
 
-        function showModal(pos, pair) {
-            document.getElementById('score-pos').innerText = pos;
-            document.getElementById('label-pos').innerText = `${pos} / ${rawData.length * 2}`;
-            document.getElementById('score-pair').innerText = pair;
-            document.getElementById('label-pair').innerText = `${pair} / ${rawData.length}`;
-            document.getElementById('result-modal').style.display = 'flex';
-        }
-
         function closeModal() { document.getElementById('result-modal').style.display = 'none'; }
-
         init();
     </script>
 </body>
