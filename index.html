@@ -7,15 +7,15 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root { --bg-color: #fefae0; --border-color: #e9c46a; --pink-bg: #fff0f5; --pink-border: #ffb6c1; --blue-bg: #f0f8ff; --blue-border: #add8e6; }
-        body { background-color: var(--bg-color); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; }
+        body { background-color: var(--bg-color); font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; }
         .header-area { margin: 40px 0 20px 0; text-align: center; }
         .game-container { display: flex; gap: 40px; padding: 20px; width: 100%; max-width: 1000px; justify-content: center; align-items: flex-start; }
         .column { flex: 1; display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .column-header { font-weight: bold; margin-bottom: 20px; font-size: 1.5rem; text-align: center; width: 100%; }
         .card-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
-        .year-hint { position: absolute; left: -85px; font-size: 0.85rem; font-weight: bold; color: #888; width: 80px; text-align: right; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+        .year-hint { position: absolute; left: -95px; font-size: 0.85rem; font-weight: bold; color: #888; width: 90px; text-align: right; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
         .year-hint.show { opacity: 1; }
-        .card { width: 100%; max-width: 320px; min-height: 50px; display: flex; align-items: center; justify-content: center; padding: 10px 15px; border-radius: 12px; text-align: center; cursor: grab; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-size: 1rem; word-break: break-all; }
+        .card { width: 100%; max-width: 320px; min-height: 55px; display: flex; align-items: center; justify-content: center; padding: 10px 15px; border-radius: 12px; text-align: center; cursor: grab; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-size: 0.95rem; word-break: break-all; }
         .card.dragging { opacity: 0.4; transform: scale(0.98); }
         .left-card { background: var(--pink-bg); border: 2px solid var(--pink-border); }
         .right-card { background: var(--blue-bg); border: 2px solid var(--blue-border); }
@@ -24,53 +24,53 @@
         .edit-link { position: fixed; bottom: 15px; right: 15px; color: #bbb; text-decoration: none; font-size: 0.75rem; background: rgba(0,0,0,0.03); padding: 8px 12px; border-radius: 6px; }
         footer { margin-top: auto; padding: 20px; font-size: 0.7rem; color: #888; text-align: center; width: 100%; }
         
-        /* モーダル（背景のぼかし） */
-        .modal { 
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(255,255,255,0.85); 
-            backdrop-filter: blur(4px); 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 1000; /* ゲーム画面より上 */
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center; width: 420px; z-index: 1001; position: relative; }
         
-        /* モーダルのコンテンツ（白いポップアップ） */
-        .modal-content { 
-            background: white; 
-            padding: 40px; 
-            border-radius: 30px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2); 
-            text-align: center; 
-            width: 380px; 
-            z-index: 1001; /* ぼかし背景より上 */
-            position: relative; /* z-indexを有効にするため */
+        /* 完全CLEARのフォントスタイル */
+        .perfect-text {
+            font-family: "Rounded Mplus 1c", "Yu Gothic", "Meiryo", sans-serif;
+            color: #6a9c1a; /* 濃い黄緑 */
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+        .congrats-text {
+            color: #555;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="header-area"><h1>年表並べ替えゲーム</h1></div>
     <div class="game-container">
-        <div class="column"><div class="column-header" id="disp-title-left">左の年表</div><div id="left-column"></div></div>
-        <div class="column"><div class="column-header" id="disp-title-right">右の年表</div><div id="right-column"></div></div>
+        <div class="column"><div class="column-header" id="disp-title-left">左カラム</div><div id="left-column"></div></div>
+        <div class="column"><div class="column-header" id="disp-title-right">右カラム</div><div id="right-column"></div></div>
     </div>
     <button id="check-btn">判定する</button>
     <a href="editor.html" class="edit-link">⚙ 問題を編集する</a>
     
     <div class="modal" id="result-modal">
         <div class="modal-content">
-            <div id="perfect-banner" style="color: #f39c12; font-weight: 900; font-size: 1.5rem; margin-bottom: 10px; display: none;">✨ PERFECT ✨</div>
-            <h2 style="margin:0 0 25px 0; color: #444;">判定結果</h2>
-            <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-                <div><div id="score-pos" style="font-size: 4rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666;">正しい位置</div></div>
-                <div><div id="score-pair" style="font-size: 4rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666;">正しいペア</div></div>
+            <div id="perfect-view" style="display:none;">
+                <div class="perfect-text">完全CLEAR！</div>
+                <div class="congrats-text">おめでとう！</div>
             </div>
-            <p id="total-labels" style="color:#999; font-size: 0.9rem; margin-bottom: 30px;"></p>
-            <button onclick="closeModal()" style="padding: 12px 40px; border-radius: 25px; border: none; background: #555; color: white; font-weight: bold; cursor: pointer;">閉じる</button>
+
+            <div id="normal-view">
+                <h2 style="margin:0 0 25px 0; color: #444;">判定結果</h2>
+                <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+                    <div><div id="score-pos" style="font-size: 4rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666;">正しい位置</div></div>
+                    <div><div id="score-pair" style="font-size: 4rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666;">正しいペア</div></div>
+                </div>
+                <p id="total-labels" style="color:#999; font-size: 0.9rem; margin-bottom: 20px;"></p>
+            </div>
+            
+            <button onclick="closeModal()" style="margin-top:20px; padding: 12px 40px; border-radius: 25px; border: none; background: #555; color: white; font-weight: bold; cursor: pointer;">閉じる</button>
         </div>
     </div>
 
@@ -79,37 +79,50 @@
     </footer>
 
     <script>
-        const config = JSON.parse(localStorage.getItem('timelineGameConfig')) || { titleLeft: "左の年表", titleRight: "右の年表", questions: [{id:1, year:"1100", left:"1", right:"a"}] };
+        // デフォルトデータを本家仕様に更新
+        const defaultConfig = {
+            titleLeft: "オモコロ", 
+            titleRight: "マンガ",
+            questions: [
+                { id: 1, year: "2008/5", left: "加藤が「手頭顔寒（てづかおさむ）」になる", right: "トリコと小松が出会う" },
+                { id: 2, year: "2010/6", left: "原宿が自分の卒アルをネットにさらす", right: "ルフィが「仲間がいる゛よ!!!!」と言う" },
+                { id: 3, year: "2011/12", left: "THE・チンゲポーカーが行われる", right: "刃牙が勇次郎と直接対決、関節をキメる" },
+                { id: 4, year: "2012/1", left: "原宿がオモコロ二代目編集長に就任", right: "レオリオがハンター選挙で演説する" },
+                { id: 5, year: "2013/3", left: "原宿がハーゲンダッツのトロをかき集める", right: "ワシズが地獄に落ちる" },
+                { id: 6, year: "2014/8", left: "ARuFaがシャワーを美少女にする", right: "暗黒大陸行きの船が出発する" },
+                { id: 7, year: "2015/12", left: "ギャラクシーの睾丸が一コになる", right: "鎧の巨人の両眼に「雷槍」が刺さる" },
+                { id: 8, year: "2016/1", left: "OLの永田がチェジュ市まで傷心旅行", right: "烏野高校男子バレー部の全国出場が決定" },
+                { id: 9, year: "2017/6", left: "キショ松容疑者が逮捕", right: "炭治郎が「煉獄さんは負けてない！」と言う" },
+                { id: 10, year: "2018/10", left: "ARuFaがケツを展示", right: "二代目野見宿禰がボルダリングする" }
+            ]
+        };
+
+        const config = JSON.parse(localStorage.getItem('timelineGameConfig')) || defaultConfig;
         document.getElementById('disp-title-left').innerText = config.titleLeft;
         document.getElementById('disp-title-right').innerText = config.titleRight;
         let tryCount = 0;
-        
-        // 紙吹雪用のキャンバスを作成し、最前面に配置する関数
         let confettiCanvas;
+
         function setupConfettiCanvas() {
-            if (confettiCanvas) return; // 既に存在すれば何もしない
+            if (confettiCanvas) return;
             confettiCanvas = document.createElement('canvas');
             confettiCanvas.style.position = 'fixed';
-            confettiCanvas.style.top = '0';
-            confettiCanvas.style.left = '0';
-            confettiCanvas.style.width = '100%';
-            confettiCanvas.style.height = '100%';
-            confettiCanvas.style.pointerEvents = 'none'; // クリックを透過させる
-            confettiCanvas.style.zIndex = '2000'; // モーダル(1001)よりもさらに上に配置
+            confettiCanvas.style.top = '0'; confettiCanvas.style.left = '0';
+            confettiCanvas.style.width = '100%'; confettiCanvas.style.height = '100%';
+            confettiCanvas.style.pointerEvents = 'none'; confettiCanvas.style.zIndex = '2000';
             document.body.appendChild(confettiCanvas);
-            
-            // canvas-confettiをこのキャンバスに関連付ける
             window.myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
         }
 
         function init() {
             const leftCol = document.getElementById('left-column');
             const rightCol = document.getElementById('right-column');
+            // ランダム表示
             const leftItems = [...config.questions].sort(() => Math.random() - 0.5);
             const rightItems = [...config.questions].sort(() => Math.random() - 0.5);
             leftItems.forEach(d => leftCol.appendChild(createWrapper(d, 'left')));
             rightItems.forEach(d => rightCol.appendChild(createWrapper(d, 'right')));
-            setupConfettiCanvas(); // 画面初期化時にキャンバスも準備
+            setupConfettiCanvas();
         }
 
         function createWrapper(item, type) {
@@ -141,25 +154,30 @@
         }
 
         document.getElementById('check-btn').onclick = () => {
-            tryCount++; const leftCards = [...document.querySelectorAll('.left-card')]; const rightCards = [...document.querySelectorAll('.right-card')];
+            tryCount++;
+            const leftCards = [...document.querySelectorAll('.left-card')];
+            const rightCards = [...document.querySelectorAll('.right-card')];
             let posScore = 0, pairScore = 0;
+
             leftCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i]?.id) posScore++; });
             rightCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i]?.id) posScore++; });
             leftCards.forEach((c, i) => { if(c.dataset.id === rightCards[i]?.dataset.id) pairScore++; });
+
             if (tryCount >= 3) document.querySelectorAll('.year-hint').forEach(h => h.classList.add('show'));
-            
+
             const isPerfect = (posScore === config.questions.length * 2 && pairScore === config.questions.length);
             
-            if (isPerfect && window.myConfetti) {
-                // 最前面のキャンバスで紙吹雪を実行
-                window.myConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
-                document.getElementById('perfect-banner').style.display = 'block'; 
+            if (isPerfect) {
+                document.getElementById('perfect-view').style.display = 'block';
+                document.getElementById('normal-view').style.display = 'none';
+                if (window.myConfetti) window.myConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             } else {
-                document.getElementById('perfect-banner').style.display = 'none';
+                document.getElementById('perfect-view').style.display = 'none';
+                document.getElementById('normal-view').style.display = 'block';
+                document.getElementById('score-pos').innerText = posScore;
+                document.getElementById('score-pair').innerText = pairScore;
+                document.getElementById('total-labels').innerText = `位置: ${posScore}/${config.questions.length*2}  ペア: ${pairScore}/${config.questions.length}`;
             }
-
-            document.getElementById('score-pos').innerText = posScore; document.getElementById('score-pair').innerText = pairScore;
-            document.getElementById('total-labels').innerText = `位置: ${posScore}/${config.questions.length*2}  ペア: ${pairScore}/${config.questions.length}`;
             document.getElementById('result-modal').style.display = 'flex';
         };
 
