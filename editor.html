@@ -5,43 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>問題作成 - 年表並べ替えゲーム</title>
     <style>
-        :root {
-            --primary: #3498db;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --bg: #f8f9fa;
-        }
+        :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --bg: #f8f9fa; }
         body { font-family: "Helvetica Neue", Arial, sans-serif; background: var(--bg); padding: 20px; color: #333; }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #555; }
+        .title-settings { display: flex; gap: 20px; margin-bottom: 20px; background: #fdf2f2; padding: 15px; border-radius: 8px; }
+        .title-input-group { flex: 1; }
+        .title-input-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: #666; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #eee; padding: 12px; border: 1px solid #ddd; }
         td { padding: 10px; border: 1px solid #ddd; text-align: center; }
         input { width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
         .controls { display: flex; justify-content: space-between; margin-top: 20px; }
-        button { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .add-btn { background: var(--success); color: white; }
-        .add-btn:hover { opacity: 0.8; }
         .start-btn { background: var(--primary); color: white; font-size: 1.2rem; }
-        .start-btn:hover { transform: scale(1.05); }
         .remove-btn { background: var(--danger); color: white; padding: 5px 12px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>問題作成エディタ</h2>
-    <p style="font-size: 0.9rem; color: #666; text-align: center;">
-        年号（ヒント）、左側の文字、右側の文字を入力してください。<br>
-        「ゲーム開始」を押すとブラウザに保存され、本編へ移動します。
-    </p>
+    <h2 style="text-align:center">問題作成エディタ</h2>
+
+    <div class="title-settings">
+        <div class="title-input-group">
+            <label>左カラムのタイトル</label>
+            <input type="text" id="main-title-left" value="オモコロ">
+        </div>
+        <div class="title-input-group">
+            <label>右カラムのタイトル</label>
+            <input type="text" id="main-title-right" value="マンガ">
+        </div>
+    </div>
 
     <table id="edit-table">
         <thead>
             <tr>
                 <th>年号(ヒント)</th>
-                <th>左側 (オモコロ)</th>
-                <th>右側 (マンガ)</th>
+                <th>左側テキスト</th>
+                <th>右側テキスト</th>
                 <th>削除</th>
             </tr>
         </thead>
@@ -50,12 +52,6 @@
                 <td><input type="text" class="in-year" value="1100"></td>
                 <td><input type="text" class="in-left" value="1"></td>
                 <td><input type="text" class="in-right" value="a"></td>
-                <td><button class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button></td>
-            </tr>
-            <tr>
-                <td><input type="text" class="in-year" value="1200"></td>
-                <td><input type="text" class="in-left" value="2"></td>
-                <td><input type="text" class="in-right" value="b"></td>
                 <td><button class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button></td>
             </tr>
         </tbody>
@@ -84,23 +80,23 @@
         const data = [];
         const rows = document.querySelectorAll('#table-body tr');
         rows.forEach((row, index) => {
-            const y = row.querySelector('.in-year').value;
-            const l = row.querySelector('.in-left').value;
-            const r = row.querySelector('.in-right').value;
-            if(l || r) { // 空文字でなければ追加
-                data.push({ id: index + 1, year: y, left: l, right: r });
-            }
+            data.push({
+                id: index + 1,
+                year: row.querySelector('.in-year').value,
+                left: row.querySelector('.in-left').value,
+                right: row.querySelector('.in-right').value
+            });
         });
-        
-        if (data.length === 0) {
-            alert("最低1つは問題を入力してください");
-            return;
-        }
 
-        localStorage.setItem('timelineGameData', JSON.stringify(data));
+        const config = {
+            titleLeft: document.getElementById('main-title-left').value,
+            titleRight: document.getElementById('main-title-right').value,
+            questions: data
+        };
+
+        localStorage.setItem('timelineGameConfig', JSON.stringify(config));
         window.location.href = 'index.html';
     }
 </script>
-
 </body>
 </html>
