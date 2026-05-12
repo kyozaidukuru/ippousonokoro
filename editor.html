@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>問題作成 - 一方そのころゲーム</title>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
     <style>
         :root {
             --primary: #3498db;
@@ -18,7 +15,7 @@
         }
 
         body {
-            font-family: sans-serif;
+            font-family: "Helvetica Neue", Arial, sans-serif;
             background: var(--bg);
             padding: 20px;
             color: #333;
@@ -39,225 +36,117 @@
             box-sizing: border-box;
         }
 
-        h2 {
-            text-align: center;
-            margin-top: 0;
-        }
+        h2 { text-align: center; margin-top: 0; color: #444; }
 
         .share-controls {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding: 15px;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
             background: #f0f4f8;
-            border-radius: 8px;
+            border: 2px solid #dce4ec;
+            border-radius: 12px;
             align-items: center;
+            justify-content: center;
         }
 
         .share-btn {
             background: var(--share);
             color: white;
-            padding: 10px 16px;
-            font-size: 0.85rem;
+            padding: 12px 24px;
+            font-size: 1rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
+            box-shadow: 0 4px 0 #8e44ad;
             transition: 0.2s;
         }
 
-        .share-btn:hover {
-            opacity: 0.9;
-        }
+        .share-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #8e44ad; }
 
         .title-settings {
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
-            background: #fdf2f2;
+            background: #fff5f5;
             padding: 15px;
             border-radius: 8px;
+            border: 1px solid #fed7d7;
         }
 
-        .title-input-group {
-            flex: 1;
-        }
+        .title-input-group { flex: 1; }
+        .title-input-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: #e53e3e; }
+        
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }
+        th { background: #f1f1f1; padding: 12px; border: 1px solid #ddd; font-size: 0.9rem; }
+        td { padding: 5px; border: 1px solid #ddd; }
+        input { width: 95%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; text-align: center; box-sizing: border-box; }
+        input:focus { border-color: var(--primary); outline: none; background: #f0f8ff; }
 
-        .title-input-group label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #666;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        th {
-            background: #eee;
-            padding: 12px;
-            border: 1px solid #ddd;
-            font-size: 0.9rem;
-        }
-
-        td {
-            padding: 5px;
-            border: 1px solid #ddd;
-        }
-
-        input {
-            width: 95%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            gap: 10px;
-        }
-
-        button {
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            border: none;
-        }
-
-        .add-btn {
-            background: var(--success);
-            color: white;
-        }
-
-        .start-btn {
-            background: var(--primary);
-            color: white;
-            font-size: 1.2rem;
-        }
-
-        .remove-btn {
-            background: var(--danger);
-            color: white;
-            padding: 5px 10px;
-        }
+        .controls { display: flex; justify-content: space-between; gap: 15px; }
+        button { padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; }
+        .add-btn { background: var(--success); color: white; border-bottom: 4px solid #27ae60; }
+        .start-btn { background: var(--primary); color: white; font-size: 1.2rem; flex-grow: 1; border-bottom: 4px solid #2980b9; }
+        .remove-btn { background: var(--danger); color: white; padding: 5px 10px; border-radius: 4px; }
 
         .qr-section {
-            margin-top: 25px;
-            background: #faf7ff;
-            border: 2px dashed #c8a2ff;
+            margin-top: 30px;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
-        }
-
-        .qr-section h3 {
-            margin-top: 0;
-        }
-
-        #generated-url {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #666;
-            word-break: break-all;
+            display: none; /* 初期は隠す */
         }
 
         #qrcode {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
+            margin: 20px auto;
+            padding: 15px;
+            background: white;
+            display: inline-block;
+            border: 1px solid #eee;
         }
 
-        .save-btn {
-            margin-top: 20px;
-            background: #16a085;
+        .save-qr-btn {
+            background: #2d3748;
             color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin-top: 10px;
         }
 
         @media (max-width: 700px) {
-
-            .title-settings {
-                flex-direction: column;
-            }
-
-            table {
-                font-size: 0.75rem;
-            }
-
-            input {
-                font-size: 0.75rem;
-            }
-
-            .controls {
-                flex-direction: column;
-            }
-
-            .start-btn,
-            .add-btn {
-                width: 100%;
-            }
-
-            .share-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .share-btn {
-                width: 100%;
-            }
+            .title-settings { flex-direction: column; }
+            .controls { flex-direction: column; }
+            .share-controls { padding: 15px; }
+            .share-btn { width: 100%; font-size: 0.9rem; }
         }
-
     </style>
 </head>
-
 <body>
 
 <div class="container">
-
     <h2>問題作成エディタ</h2>
 
     <div class="share-controls">
-
-        <span style="font-size: 0.85rem; font-weight: bold;">
-            共有機能:
-        </span>
-
-        <button class="share-btn" onclick="copySNSLink()">
-            SNS共有用リンクを生成しコピーする
+        <button class="share-btn" onclick="generateAndCopyLink()">
+            🔗 SNS共有リンクとQRコードを生成
         </button>
-
-        <button class="share-btn" style="background: #7f8c8d;" onclick="importShareCode()">
-            コードから読込
-        </button>
-
     </div>
 
     <div class="title-settings">
-
         <div class="title-input-group">
             <label>左カラム名</label>
             <input type="text" id="main-title-left" value="オモコロ">
         </div>
-
         <div class="title-input-group">
             <label>右カラム名</label>
             <input type="text" id="main-title-right" value="マンガ">
         </div>
-
     </div>
 
     <table>
-
         <thead>
             <tr>
                 <th style="width: 15%;">年号</th>
@@ -266,64 +155,39 @@
                 <th style="width: 10%;">削除</th>
             </tr>
         </thead>
-
         <tbody id="table-body"></tbody>
-
     </table>
 
     <div class="controls">
-
-        <button class="add-btn" onclick="addRow()">
-            ＋ 行を追加
-        </button>
-
-        <button class="start-btn" onclick="saveAndStart()">
-            ゲーム開始！
-        </button>
-
+        <button class="add-btn" onclick="addRow()">＋ 行を追加</button>
+        <button class="start-btn" onclick="saveAndStart()">この内容でゲーム開始！</button>
     </div>
 
-    <div class="qr-section">
-
-        <h3>QRコード共有</h3>
-
-        <p style="font-size:0.9rem; color:#666;">
-            スマホで読み取ることで、作成した問題を直接遊べます
-        </p>
-
-        <div id="generated-url"></div>
-
+    <div id="qr-area" class="qr-section">
+        <h3 style="margin:0;">QRコードで共有</h3>
+        <p style="font-size:0.85rem; color:#666; margin: 10px 0;">スマホのカメラで読み取るとすぐに遊べます</p>
         <div id="qrcode"></div>
-
-        <button class="save-btn" onclick="saveQRCode()">
-            QRコード画像を保存
-        </button>
-
+        <br>
+        <button class="save-qr-btn" onclick="saveQRCode()">画像を保存する</button>
     </div>
-
 </div>
 
 <script>
-
     const defaultData = [
-        ["2008/5", "加藤が「手頭顔寒(てづかおさむ)」になる", "トリコと小松が出会う"],
-        ["2010/6", "原宿が自分の卒アルを晒す", "ルフィが「仲間がいる゛よ!!!!」と言う"],
-        ["2011/12", "THE・チンゲポーカーが行われる", "刃牙が勇次郎と直接対決、関節をキメる"],
-        ["2012/1", "原宿がオモコロ二代目編集長に就任", "レオリオがハンター選挙で演説する"],
-        ["2013/3", "原宿がハーゲンダッツのトロをかき集める", "ワシズが地獄に落ちる"],
-        ["2014/8", "ARuFaがシャワーを美少女にする", "暗黒大陸行きの船が出発する"],
-        ["2015/12", "ギャラクシーの睾丸が1コになる", "鎧の巨人の両眼に「雷槍」が刺さる"],
-        ["2016/1", "OLの永田がチェジュ島へ傷心旅行", "烏野高校男子バレー部の全国出場が決定"],
-        ["2017/6", "キショ松容疑者が逮捕", "炭治郎が「煉獄さんは負けてない！」と言う"],
-        ["2018/10", "ARuFaがケツを展示", "二代目野見宿禰がボルダリングする"]
+        ["2008/5", "加藤が「手頭顔寒」になる", "トリコと小松が出会う"],
+        ["2010/6", "原宿が自分の卒アルを晒す", "ルフィが仲間の存在に気づく"],
+        ["2011/12", "THE・チンゲポーカー", "刃牙が勇次郎に関節をキメる"],
+        ["2012/1", "原宿が二代目編集長に就任", "レオリオが選挙で演説"],
+        ["2013/3", "原宿がトロをかき集める", "ワシズが地獄に落ちる"],
+        ["2014/8", "ARuFaがシャワーを美少女に", "暗黒大陸行きの船が出発"],
+        ["2015/12", "ギャラクシーの睾丸が1個に", "鎧の巨人に雷槍が刺さる"],
+        ["2016/1", "永田がチェジュ島へ傷心旅行", "烏野高校が全国出場決定"],
+        ["2017/6", "キショ松容疑者が逮捕", "炭治郎が煉獄の勝利を叫ぶ"],
+        ["2018/10", "ARuFaがケツを展示", "二代目野見宿禰が登場"]
     ];
 
-    let latestURL = "";
-
     window.onload = () => {
-
         const saved = JSON.parse(localStorage.getItem('timelineGameConfig'));
-
         if (saved) {
             loadConfig(saved);
         } else {
@@ -332,37 +196,23 @@
     };
 
     function addRowWithData(y="", l="", r="") {
-
         const tr = document.createElement('tr');
-
         tr.innerHTML = `
             <td><input type="text" class="in-year" value="${y}"></td>
             <td><input type="text" class="in-left" value="${l}"></td>
             <td><input type="text" class="in-right" value="${r}"></td>
-            <td>
-                <button class="remove-btn" onclick="this.parentElement.parentElement.remove()">
-                    ×
-                </button>
-            </td>
+            <td><button class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button></td>
         `;
-
         document.getElementById('table-body').appendChild(tr);
     }
 
-    function addRow() {
-        addRowWithData();
-    }
+    function addRow() { addRowWithData(); }
 
     function getConfig() {
-
         const questions = [];
-
         document.querySelectorAll('#table-body tr').forEach((row, i) => {
-
             const l = row.querySelector('.in-left').value;
-
             if (l.trim()) {
-
                 questions.push({
                     id: i + 1,
                     year: row.querySelector('.in-year').value,
@@ -371,7 +221,6 @@
                 });
             }
         });
-
         return {
             titleLeft: document.getElementById('main-title-left').value,
             titleRight: document.getElementById('main-title-right').value,
@@ -379,109 +228,70 @@
         };
     }
 
-    function generateShareURL() {
-
+    function generateAndCopyLink() {
         const config = getConfig();
+        if (config.questions.length === 0) return alert("問題を入力してください");
 
-        const base64 =
-            btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+        // URL生成
+        const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+        const url = window.location.origin + window.location.pathname.replace('editor.html', 'index.html') + "?q=" + base64;
 
-        return window.location.origin +
-            window.location.pathname.replace('editor.html', 'index.html') +
-            "?q=" + base64;
-    }
-
-    function copySNSLink() {
-
-        latestURL = generateShareURL();
-
-        navigator.clipboard.writeText(latestURL)
-            .then(() => {
-
-                alert("SNS共有用リンクをコピーしました！");
-
-                document.getElementById('generated-url').innerText = latestURL;
-
-                generateQRCode(latestURL);
+        // クリップボードコピー
+        navigator.clipboard.writeText(url).then(() => {
+            alert("SNS共有用リンクをコピーしました！\n下のQRコードも利用できます。");
+            
+            // QRコードセクションを表示して生成
+            document.getElementById('qr-area').style.display = 'block';
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = "";
+            
+            // URLが長いので、サイズを少し大きくし、誤り訂正レベルをL(最低)にして密度を下げる
+            new QRCode(qrContainer, {
+                text: url,
+                width: 280,
+                height: 280,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.L 
             });
-    }
-
-    function generateQRCode(url) {
-
-        const qrArea = document.getElementById('qrcode');
-
-        qrArea.innerHTML = "";
-
-        new QRCode(qrArea, {
-            text: url,
-            width: 220,
-            height: 220
+            
+            // 生成された直後にスクロール
+            document.getElementById('qr-area').scrollIntoView({ behavior: 'smooth' });
         });
     }
 
     function saveQRCode() {
-
-        const canvas = document.querySelector('#qrcode canvas');
-
-        if (!canvas) {
-            alert("先にQRコードを生成してください");
+        // qrcode.jsはimgタグまたはcanvasタグを生成する
+        const qrImg = document.querySelector('#qrcode img');
+        const qrCanvas = document.querySelector('#qrcode canvas');
+        
+        let dataURL;
+        if (qrImg && qrImg.src) {
+            dataURL = qrImg.src;
+        } else if (qrCanvas) {
+            dataURL = qrCanvas.toDataURL("image/png");
+        } else {
+            alert("QRコードが生成されていません");
             return;
         }
 
         const link = document.createElement('a');
-
         link.download = 'timeline-game-qr.png';
-
-        link.href = canvas.toDataURL();
-
+        link.href = dataURL;
         link.click();
     }
 
-    function importShareCode() {
-
-        const code = prompt("コードを貼り付けてください");
-
-        if (code) {
-
-            try {
-
-                loadConfig(
-                    JSON.parse(decodeURIComponent(escape(atob(code))))
-                );
-
-                alert("読み込み完了");
-
-            } catch(e) {
-
-                alert("無効なコードです");
-            }
-        }
-    }
-
     function loadConfig(c) {
-
         document.getElementById('main-title-left').value = c.titleLeft;
-
         document.getElementById('main-title-right').value = c.titleRight;
-
         document.getElementById('table-body').innerHTML = "";
-
-        c.questions.forEach(q => {
-            addRowWithData(q.year, q.left, q.right);
-        });
+        c.questions.forEach(q => addRowWithData(q.year, q.left, q.right));
     }
 
     function saveAndStart() {
-
-        localStorage.setItem(
-            'timelineGameConfig',
-            JSON.stringify(getConfig())
-        );
-
+        localStorage.setItem('timelineGameConfig', JSON.stringify(getConfig()));
         window.location.href = 'index.html';
     }
-
 </script>
-
 </body>
 </html>
