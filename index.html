@@ -4,69 +4,361 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>一方そのころゲーム</title>
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
     <style>
-        :root { --bg-color: #fefae0; --border-color: #e9c46a; --pink-bg: #fff0f5; --pink-border: #ffb6c1; --blue-bg: #f0f8ff; --blue-border: #add8e6; }
-        body { background-color: var(--bg-color); font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; border: 10px solid var(--border-color); box-sizing: border-box; overflow-x: hidden; }
-        .header-area { margin: 30px 0 10px 0; text-align: center; }
-        .game-container { display: flex; gap: 20px; padding: 10px; width: 100%; max-width: 800px; justify-content: center; align-items: flex-start; box-sizing: border-box; }
-        .column { flex: 1; display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; }
-        .column-header { font-weight: bold; margin-bottom: 15px; font-size: 1.2rem; text-align: center; width: 100%; }
-        .card-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; padding: 2px 0; }
-        .year-hint { position: absolute; left: -75px; font-size: 0.75rem; font-weight: bold; color: #888; width: 70px; text-align: right; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
-        .year-hint.show { opacity: 1; }
-        .card { 
-            width: 100%; height: 75px; display: flex; align-items: center; justify-content: center; padding: 5px 10px; 
-            border-radius: 10px; text-align: center; cursor: grab; font-weight: bold; box-shadow: 0 3px 5px rgba(0,0,0,0.05); 
-            font-size: 0.85rem; word-break: break-all; box-sizing: border-box; touch-action: none; user-select: none; overflow: hidden;
+        :root {
+            --bg-color: #fefae0;
+            --border-color: #e9c46a;
+            --pink-bg: #fff0f5;
+            --pink-border: #ffb6c1;
+            --blue-bg: #f0f8ff;
+            --blue-border: #add8e6;
         }
-        .card.dragging { opacity: 0.4; transform: scale(0.98); border: 2px dashed #999; }
-        .left-card { background: var(--pink-bg); border: 2px solid var(--pink-border); }
-        .right-card { background: var(--blue-bg); border: 2px solid var(--blue-border); }
-        #check-btn { margin: 30px; padding: 15px 60px; font-size: 1.2rem; font-weight: bold; background: white; border: 4px solid #555; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #333; z-index: 10; }
-        #check-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
-        .edit-link { position: fixed; bottom: 10px; right: 10px; color: #bbb; text-decoration: none; font-size: 0.7rem; background: rgba(0,0,0,0.03); padding: 5px 10px; border-radius: 6px; z-index: 5; }
-        footer { margin-top: auto; padding: 15px; font-size: 0.65rem; color: #888; text-align: center; width: 100%; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); text-align: center; width: 90%; max-width: 400px; z-index: 3001; position: relative; }
-        .perfect-text { color: #6a9c1a; font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1.1; letter-spacing: -2px; }
-        .congrats-text { color: #555; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            border: 10px solid var(--border-color);
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .header-area {
+            margin: 25px 0 10px 0;
+            text-align: center;
+        }
+
+        .header-area h1 {
+            margin-bottom: 10px;
+        }
+
+        .rule-box {
+            background: rgba(255,255,255,0.7);
+            border: 2px solid #e4d8a5;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin: 10px auto 20px auto;
+            width: 90%;
+            max-width: 700px;
+            box-sizing: border-box;
+        }
+
+        .rule-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        .rule-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #555;
+            line-height: 1.7;
+            font-size: 0.92rem;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            padding: 10px;
+            width: 100%;
+            max-width: 800px;
+            justify-content: center;
+            align-items: flex-start;
+            box-sizing: border-box;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .column-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        .card-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+            padding: 2px 0;
+        }
+
+        .year-hint {
+            position: absolute;
+            left: -75px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #888;
+            width: 70px;
+            text-align: right;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .year-hint.show {
+            opacity: 1;
+        }
+
+        .card {
+            width: 100%;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 10px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: grab;
+            font-weight: bold;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.05);
+            font-size: 0.85rem;
+            word-break: break-all;
+            box-sizing: border-box;
+            touch-action: none;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .card.dragging {
+            opacity: 0.4;
+            transform: scale(0.98);
+            border: 2px dashed #999;
+        }
+
+        .left-card {
+            background: var(--pink-bg);
+            border: 2px solid var(--pink-border);
+        }
+
+        .right-card {
+            background: var(--blue-bg);
+            border: 2px solid var(--blue-border);
+        }
+
+        #check-btn {
+            margin: 30px;
+            padding: 15px 60px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: white;
+            border: 4px solid #555;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #333;
+            z-index: 10;
+        }
+
+        #check-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #333;
+        }
+
+        .edit-link {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background: #6c63ff;
+            padding: 10px 16px;
+            border-radius: 12px;
+            z-index: 5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+
+        .edit-link:hover {
+            background: #5548ff;
+            transform: translateY(-1px);
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 15px;
+            font-size: 0.65rem;
+            color: #888;
+            text-align: center;
+            width: 100%;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            z-index: 3001;
+            position: relative;
+        }
+
+        .perfect-text {
+            color: #6a9c1a;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .congrats-text {
+            color: #555;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
         @media (max-width: 600px) {
-            .game-container { gap: 10px; padding: 5px; }
-            .year-hint { left: -55px; width: 50px; font-size: 0.6rem; }
-            .card { font-size: 0.75rem; height: 65px; }
+
+            .game-container {
+                gap: 10px;
+                padding: 5px;
+            }
+
+            .year-hint {
+                left: -55px;
+                width: 50px;
+                font-size: 0.6rem;
+            }
+
+            .card {
+                font-size: 0.75rem;
+                height: 65px;
+            }
+
+            .rule-box {
+                font-size: 0.85rem;
+            }
+
+            .edit-link {
+                font-size: 0.75rem;
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="header-area"><h1>一方そのころゲーム</h1></div>
-    <div class="game-container">
-        <div class="column"><div class="column-header" id="disp-title-left">左カラム</div><div id="left-column"></div></div>
-        <div class="column"><div class="column-header" id="disp-title-right">右カラム</div><div id="right-column"></div></div>
+
+    <div class="header-area">
+        <h1>一方そのころゲーム</h1>
     </div>
+
+    <div class="rule-box">
+        <div class="rule-title">遊び方</div>
+
+        <ul>
+            <li>左右の年表を、上から古い順に並び替えよう</li>
+            <li>「一方そのころ」になる正しい組み合わせを作ろう</li>
+            <li>判定ボタンを押すと、正しい位置と正しいペア数が分かります</li>
+            <li>何度でも判定しながら完成を目指そう！</li>
+        </ul>
+    </div>
+
+    <div class="game-container">
+
+        <div class="column">
+            <div class="column-header" id="disp-title-left">左カラム</div>
+            <div id="left-column"></div>
+        </div>
+
+        <div class="column">
+            <div class="column-header" id="disp-title-right">右カラム</div>
+            <div id="right-column"></div>
+        </div>
+
+    </div>
+
     <button id="check-btn">判定する</button>
-    <a href="editor.html" class="edit-link">⚙ 問題を編集する</a>
-    
+
+    <a href="editor.html" class="edit-link">✏ 問題を編集する</a>
+
     <div class="modal" id="result-modal">
+
         <div class="modal-content">
-            <div id="perfect-view" style="display:none;"><div class="perfect-text">完全CLEAR！</div><div class="congrats-text">おめでとう！</div></div>
-            <div id="normal-view">
-                <h2 style="margin:0 0 20px 0; color: #444;">判定結果</h2>
-                <div style="display: flex; justify-content: space-around; margin-bottom: 15px;">
-                    <div><div id="score-pos" style="font-size: 3rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666; font-size:0.8rem;">正しい位置</div></div>
-                    <div><div id="score-pair" style="font-size: 3rem; font-weight: 900;">0</div><div style="font-weight:bold; color:#666; font-size:0.8rem;">正しいペア</div></div>
-                </div>
-                <p id="total-labels" style="color:#999; font-size: 0.8rem; margin-bottom: 15px;"></p>
+
+            <div id="perfect-view" style="display:none;">
+                <div class="perfect-text">完全CLEAR！</div>
+                <div class="congrats-text">おめでとう！</div>
             </div>
-            <button onclick="closeModal()" style="margin-top:10px; padding: 10px 30px; border-radius: 20px; border: none; background: #555; color: white; font-weight: bold; cursor: pointer;">閉じる</button>
+
+            <div id="normal-view">
+
+                <h2 style="margin:0 0 20px 0; color: #444;">
+                    判定結果
+                </h2>
+
+                <div style="display: flex; justify-content: space-around; margin-bottom: 15px;">
+
+                    <div>
+                        <div id="score-pos" style="font-size: 3rem; font-weight: 900;">0</div>
+                        <div style="font-weight:bold; color:#666; font-size:0.8rem;">正しい位置</div>
+                    </div>
+
+                    <div>
+                        <div id="score-pair" style="font-size: 3rem; font-weight: 900;">0</div>
+                        <div style="font-weight:bold; color:#666; font-size:0.8rem;">正しいペア</div>
+                    </div>
+
+                </div>
+
+                <p id="total-labels" style="color:#999; font-size: 0.8rem; margin-bottom: 15px;"></p>
+
+            </div>
+
+            <button onclick="closeModal()"
+                style="margin-top:10px; padding: 10px 30px; border-radius: 20px; border: none; background: #555; color: white; font-weight: bold; cursor: pointer;">
+                閉じる
+            </button>
+
         </div>
     </div>
 
-    <footer>本プロジェクトは「オモコロチャンネル」のリスペクト企画です。</footer>
+    <footer>
+        本プロジェクトは「オモコロチャンネル」のリスペクト企画です。
+    </footer>
 
     <script>
         const defaultConfig = {
-            titleLeft: "オモコロ", titleRight: "マンガ",
+            titleLeft: "オモコロ",
+            titleRight: "マンガ",
             questions: [
                 { id: 1, year: "2008/5", left: "加藤が「手頭顔寒」になる", right: "トリコと小松が出会う" },
                 { id: 2, year: "2010/6", left: "原宿が自分の卒アルを晒す", right: "ルフィが仲間の存在に気づく" },
@@ -84,110 +376,234 @@
         function getConfig() {
             const params = new URLSearchParams(window.location.search);
             const q = params.get('q');
+
             if (q) {
-                try { return JSON.parse(decodeURIComponent(escape(atob(q)))); } catch (e) { console.error(e); }
+                try {
+                    return JSON.parse(decodeURIComponent(escape(atob(q))));
+                } catch (e) {
+                    console.error(e);
+                }
             }
+
             return JSON.parse(localStorage.getItem('timelineGameConfig')) || defaultConfig;
         }
 
         const config = getConfig();
+
         document.getElementById('disp-title-left').innerText = config.titleLeft;
         document.getElementById('disp-title-right').innerText = config.titleRight;
+
         let tryCount = 0;
         let confettiCanvas;
 
         function setupConfettiCanvas() {
+
             if (confettiCanvas) return;
+
             confettiCanvas = document.createElement('canvas');
-            confettiCanvas.style.position = 'fixed'; confettiCanvas.style.top = '0'; confettiCanvas.style.left = '0';
-            confettiCanvas.style.width = '100%'; confettiCanvas.style.height = '100%';
-            confettiCanvas.style.pointerEvents = 'none'; confettiCanvas.style.zIndex = '4000';
+
+            confettiCanvas.style.position = 'fixed';
+            confettiCanvas.style.top = '0';
+            confettiCanvas.style.left = '0';
+            confettiCanvas.style.width = '100%';
+            confettiCanvas.style.height = '100%';
+            confettiCanvas.style.pointerEvents = 'none';
+            confettiCanvas.style.zIndex = '4000';
+
             document.body.appendChild(confettiCanvas);
-            window.myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+
+            window.myConfetti = confetti.create(confettiCanvas, {
+                resize: true,
+                useWorker: true
+            });
         }
 
         function init() {
+
             const leftCol = document.getElementById('left-column');
             const rightCol = document.getElementById('right-column');
+
             const leftItems = [...config.questions].sort(() => Math.random() - 0.5);
             const rightItems = [...config.questions].sort(() => Math.random() - 0.5);
+
             leftItems.forEach(d => leftCol.appendChild(createWrapper(d, 'left')));
             rightItems.forEach(d => rightCol.appendChild(createWrapper(d, 'right')));
+
             setupConfettiCanvas();
         }
 
         function createWrapper(item, type) {
-            const div = document.createElement('div'); div.className = 'card-wrapper';
-            const hint = document.createElement('div'); hint.className = 'year-hint'; hint.innerText = item.year;
+
+            const div = document.createElement('div');
+            div.className = 'card-wrapper';
+
+            const hint = document.createElement('div');
+            hint.className = 'year-hint';
+            hint.innerText = item.year;
+
             if (type === 'right') hint.style.display = 'none';
-            const card = document.createElement('div'); card.className = `card ${type}-card`;
-            card.innerText = type === 'left' ? item.left : item.right; card.dataset.id = item.id; card.draggable = true;
-            card.addEventListener('touchstart', handleTouchStart, {passive: false});
-            card.addEventListener('touchmove', handleTouchMove, {passive: false});
+
+            const card = document.createElement('div');
+
+            card.className = `card ${type}-card`;
+
+            card.innerText = type === 'left' ? item.left : item.right;
+
+            card.dataset.id = item.id;
+
+            card.draggable = true;
+
+            card.addEventListener('touchstart', handleTouchStart, { passive: false });
+            card.addEventListener('touchmove', handleTouchMove, { passive: false });
             card.addEventListener('touchend', handleTouchEnd);
+
             card.addEventListener('dragstart', () => card.classList.add('dragging'));
             card.addEventListener('dragend', () => card.classList.remove('dragging'));
-            div.appendChild(hint); div.appendChild(card);
+
+            div.appendChild(hint);
+            div.appendChild(card);
+
             div.addEventListener('dragover', e => {
+
                 e.preventDefault();
+
                 const dragging = document.querySelector('.dragging');
+
                 if (!dragging || !dragging.classList.contains(`${type}-card`)) return;
+
                 const container = div.parentElement;
+
                 const afterElement = getDragAfterElement(container, e.clientY);
-                if (!afterElement) container.appendChild(dragging.parentElement);
-                else container.insertBefore(dragging.parentElement, afterElement);
+
+                if (!afterElement) {
+                    container.appendChild(dragging.parentElement);
+                } else {
+                    container.insertBefore(dragging.parentElement, afterElement);
+                }
             });
+
             return div;
         }
 
         let activeCard = null;
-        function handleTouchStart(e) { activeCard = e.target; activeCard.classList.add('dragging'); }
-        function handleTouchMove(e) {
-            if (!activeCard) return; e.preventDefault();
-            const touch = e.touches[0];
-            const container = activeCard.parentElement.parentElement;
-            const afterElement = getDragAfterElement(container, touch.clientY);
-            if (!afterElement) container.appendChild(activeCard.parentElement);
-            else container.insertBefore(activeCard.parentElement, afterElement);
+
+        function handleTouchStart(e) {
+            activeCard = e.target;
+            activeCard.classList.add('dragging');
         }
-        function handleTouchEnd() { if (activeCard) activeCard.classList.remove('dragging'); activeCard = null; }
+
+        function handleTouchMove(e) {
+
+            if (!activeCard) return;
+
+            e.preventDefault();
+
+            const touch = e.touches[0];
+
+            const container = activeCard.parentElement.parentElement;
+
+            const afterElement = getDragAfterElement(container, touch.clientY);
+
+            if (!afterElement) {
+                container.appendChild(activeCard.parentElement);
+            } else {
+                container.insertBefore(activeCard.parentElement, afterElement);
+            }
+        }
+
+        function handleTouchEnd() {
+
+            if (activeCard) {
+                activeCard.classList.remove('dragging');
+            }
+
+            activeCard = null;
+        }
 
         function getDragAfterElement(container, y) {
+
             const elements = [...container.querySelectorAll('.card-wrapper:not(:has(.dragging))')];
+
             return elements.reduce((closest, child) => {
+
                 const box = child.getBoundingClientRect();
+
                 const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) return { offset, element: child };
-                else return closest;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                } else {
+                    return closest;
+                }
+
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
         document.getElementById('check-btn').onclick = () => {
+
             tryCount++;
+
             const leftCards = [...document.querySelectorAll('.left-card')];
             const rightCards = [...document.querySelectorAll('.right-card')];
-            let posScore = 0, pairScore = 0;
-            leftCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i]?.id) posScore++; });
-            rightCards.forEach((c, i) => { if(parseInt(c.dataset.id) === config.questions[i]?.id) posScore++; });
-            leftCards.forEach((c, i) => { if(c.dataset.id === rightCards[i]?.dataset.id) pairScore++; });
-            if (tryCount >= 3) document.querySelectorAll('.year-hint').forEach(h => h.classList.add('show'));
-            const isPerfect = (posScore === config.questions.length * 2 && pairScore === config.questions.length);
+
+            let posScore = 0;
+            let pairScore = 0;
+
+            leftCards.forEach((c, i) => {
+                if (parseInt(c.dataset.id) === config.questions[i]?.id) posScore++;
+            });
+
+            rightCards.forEach((c, i) => {
+                if (parseInt(c.dataset.id) === config.questions[i]?.id) posScore++;
+            });
+
+            leftCards.forEach((c, i) => {
+                if (c.dataset.id === rightCards[i]?.dataset.id) pairScore++;
+            });
+
+            if (tryCount >= 3) {
+                document.querySelectorAll('.year-hint').forEach(h => h.classList.add('show'));
+            }
+
+            const isPerfect =
+                (posScore === config.questions.length * 2 &&
+                 pairScore === config.questions.length);
+
             if (isPerfect) {
+
                 document.getElementById('perfect-view').style.display = 'block';
                 document.getElementById('normal-view').style.display = 'none';
-                if (window.myConfetti) window.myConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+
+                if (window.myConfetti) {
+                    window.myConfetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                }
+
             } else {
+
                 document.getElementById('perfect-view').style.display = 'none';
                 document.getElementById('normal-view').style.display = 'block';
+
                 document.getElementById('score-pos').innerText = posScore;
                 document.getElementById('score-pair').innerText = pairScore;
-                document.getElementById('total-labels').innerText = `位置: ${posScore}/${config.questions.length*2}  ペア: ${pairScore}/${config.questions.length}`;
+
+                document.getElementById('total-labels').innerText =
+                    `位置: ${posScore}/${config.questions.length * 2}  ペア: ${pairScore}/${config.questions.length}`;
             }
+
             document.getElementById('result-modal').style.display = 'flex';
         };
 
-        function closeModal() { document.getElementById('result-modal').style.display = 'none'; }
+        function closeModal() {
+            document.getElementById('result-modal').style.display = 'none';
+        }
+
         init();
+
     </script>
+
 </body>
 </html>
