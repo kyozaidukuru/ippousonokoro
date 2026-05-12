@@ -232,8 +232,11 @@
         const config = getConfig();
         if (config.questions.length === 0) return alert("問題を入力してください");
 
-        // URL生成
-        const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+        // Safari対応の安定したエンコード方式
+        const jsonStr = JSON.stringify(config);
+        const bytes = new TextEncoder().encode(jsonStr);
+        const base64 = btoa(String.fromCharCode(...bytes));
+        
         const url = window.location.origin + window.location.pathname.replace('editor.html', 'index.html') + "?q=" + base64;
 
         // クリップボードコピー
@@ -261,7 +264,6 @@
     }
 
     function saveQRCode() {
-        // qrcode.jsはimgタグまたはcanvasタグを生成する
         const qrImg = document.querySelector('#qrcode img');
         const qrCanvas = document.querySelector('#qrcode canvas');
         
